@@ -24,7 +24,8 @@ mps_device = t.device("mps")
 
 
 def print_hi(name=None):
-    data_path_set = ImageDataPath('/Users/jon/data/dogs-vs-cats-redux-kernels-edition/train', train=True)
+    opt = DefaultConfig()
+    data_path_set = ImageDataPath(opt.train_data_root, train=True)
     train_Loader = DataLoader(data_path_set,
                               batch_size=10,
                               shuffle=True,
