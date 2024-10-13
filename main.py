@@ -9,6 +9,7 @@ from torch.autograd import Variable as V
 from torch.utils.data import DataLoader
 from torchnet import meter
 from torchvision.transforms import ToPILImage
+import sys
 
 import models
 from config.config import DefaultConfig
@@ -19,12 +20,28 @@ try:
 except:
     import pdb as ipdb
 
+opt = DefaultConfig()
 
-mps_device = t.device("mps")
+if opt.use_gpu and sys.platform.startswith('darwin'):
+    mps_device = t.device("mps")
+else:
+    mps_device = None
 
+def to_gpu(data):
+    if opt.use_gpu:
+        if sys.platform.startswith('darwin'):
+            return data.to(mps_device)
+        elif sys.platform.startswith('linux'):
+            return data.cuda()
+        else:
+            raise Exception('Unsupported os')
+    return data
+
+
+def hello_world():
+    print('hello world')
 
 def print_hi(name=None):
-    opt = DefaultConfig()
     data_path_set = ImageDataPath(opt.train_data_root, train=True)
     train_Loader = DataLoader(data_path_set,
                               batch_size=10,
@@ -51,14 +68,12 @@ def try_visualizer():
 
 
 def train(**kwargs):
-    opt = DefaultConfig()
     vis = Visualizer(opt.env)
     # step1: Model
     model = getattr(models, opt.model)(num_classes=2, dropout=0.5, name=opt.model)
     if opt.load_model_path:
         model.load(opt.load_model_path)
-    if opt.use_gpu:
-        model.to(mps_device)
+    to_gpu(model)
 
     # step2: data
     train_data_path = ImageDataPath(opt.train_data_root, train=True)
@@ -89,8 +104,8 @@ def train(**kwargs):
             input = V(data)
             target = V(label)
             if opt.use_gpu:
-                input = input.to(mps_device)
-                target = target.to(mps_device)
+                input = to_gpu(input)
+                target = to_gpu(target)
             optimizer.zero_grad()
             score = model(input)
             loss = criterion(score, target)
@@ -130,8 +145,7 @@ def val(model, dataloader, opt):
     with torch.no_grad():
         for ii, (input, label) in enumerate(dataloader):
             val_input = V(input)
-            if opt.use_gpu:
-                val_input = val_input.to('mps')
+            val_input = to_gpu(val_input)
             score = model(val_input)
             confusion_matrix.add(score.data, label)
             # print('Validate: The first target is %s, predicted value is %s' % (label[0], score.data[0]))

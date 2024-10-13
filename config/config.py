@@ -1,17 +1,28 @@
 import warnings
+import sys
 
 
 class DefaultConfig(object):
     env = 'default'
     model = 'AlexNet'
     # model = 'resnet34'
-    train_data_root = '/Users/jon/data/dogs-vs-cats-redux-kernels-edition/train'
-    test_data_root = '/Users/jon/data/dogs-vs-cats-redux-kernels-edition/test'
-    load_model_path = 'checkpoints/AlexNet_0621_23:42:18.pth'
+    if sys.platform.startswith('linux'): 
+        print('current os is linux')
+        train_data_root = '/mnt/e/data/dogs-vs-cats-redux-kernels-edition/train'
+        test_data_root = '/mnt/e/data/dogs-vs-cats-redux-kernels-edition/train'
+        load_model_path = None
+        use_gpu = True
+    elif sys.platform.startswith('darwin'):
+        print('current os is macos')
+        train_data_root = '/Users/jon/data/dogs-vs-cats-redux-kernels-edition/train'
+        test_data_root = '/Users/jon/data/dogs-vs-cats-redux-kernels-edition/test'
+        load_model_path = 'checkpoints/AlexNet_0621_23:42:18.pth'
+        use_gpu = True
+    else:
+        raise Exception('Unsupported OS!!!')
     # load_model_path = None
     need_save = True
     batch_size = 32
-    use_gpu = True
     num_workers = 4
     print_freq = 20
     debug_file = '/tmp/debug'

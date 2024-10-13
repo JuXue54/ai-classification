@@ -3,3 +3,7 @@ venv/
 .idea/
 
 checkpoints/
+
+.vscode
+
+__pycache__/
